@@ -1,0 +1,40 @@
+version: '3'
+services:
+  db:
+    image: postgres 
+    ports: 
+      - "5432:5432"
+  api:
+    build: 
+      context: backend
+      dockerfile: Dockerfile
+    command: /usr/sbin/apachectl -DFOREGROUND
+    working_dir: /code
+    environment:
+      - VIRTUAL_HOST=api.beaver.agency
+      - NODE_ENV=production     
+    volumes:
+      - .:/code
+      - ./certs:etc/apache2/ssl
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "8000:8000"
+      - "8080:80"
+      - "8443:443"
+    depends_on:
+      - db
+  client:
+    environment:
+      - NODE_ENV=production     
+      - VIRTUAL_HOST=beaver.agency
+    build: 
+      context: frontend
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:/usr/share/nginx/html
+    depends_on:
+      - api
+    ports:
+      - "4200:4200"
+      - "80:80"
+      - "465:465"
